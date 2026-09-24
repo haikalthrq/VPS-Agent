@@ -31,10 +31,4 @@ jobs:
           passphrase: ${{ secrets.VPS_PASSPHRASE || '' }}
           script_stop: true
           script: |
-            DEPLOY_PATH="${{ secrets.VPS_DEPLOY_PATH || '/root/VPS-Agent' }}"
-            if [ ! -d "${DEPLOY_PATH}" ]; then
-              echo "Error: Directory ${DEPLOY_PATH} not found on VPS!" >&2
-              exit 1
-            fi
-            cd "${DEPLOY_PATH}"
-            sudo bash scripts/manage.sh update
+            sudo -n /usr/local/sbin/vps-agent-deploy

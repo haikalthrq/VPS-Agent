@@ -80,7 +80,14 @@ The gateway runs as `root` because the current VPS deployment intentionally gran
 
 ## CI/CD Auto-Deploy (GitHub Actions)
 
-This repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automatically deploys updates to your VPS whenever changes are pushed to `main`.
+This repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automatically deploys updates to your VPS whenever deployment files change on `main`. First, run the following **once** on the VPS to create a root-owned deployment checkout and install the dedicated sudo command:
+
+```bash
+sudo bash scripts/setup-deploy.sh
+sudo -n /usr/local/sbin/vps-agent-deploy
+```
+
+The command pulls from `main`, validates the configuration, updates the root-owned Hermes files, and restarts the gateway. It does not replace `/root/.hermes/.env` or `/root/.hermes/auth.json`. The regular `uniserver` account may run only this dedicated deployment command without a sudo password; other sudo commands still require one.
 
 ### Required GitHub Secrets
 
@@ -92,7 +99,6 @@ Configure these in your GitHub repository (**Settings > Secrets and variables > 
 | `VPS_USERNAME` | SSH user | `root` or `ubuntu` |
 | `VPS_SSH_KEY` | Private SSH key for the VPS | Content of `id_ed25519` |
 | `VPS_PORT` | *(Optional)* SSH port, defaults to 22 | `22` |
-| `VPS_DEPLOY_PATH` | *(Optional)* Absolute repo path on VPS | `/root/VPS-Agent` |
 | `VPS_PASSPHRASE` | *(Optional)* Passphrase if SSH key is encrypted | `secret` |
 
 ### Setting Up SSH Key on VPS
