@@ -1,0 +1,39 @@
+.env
+auth.json
+*.db
+*.db-shm
+*.db-wal
+gateway.lock
+gateway.pid
+gateway_state.json
+channel_directory.json
+logs/
+cache/
+audio_cache/
+image_cache/
+sessions/
+pairing/
+pending_messages/
+cron/
+memories/
+state/
+*** Add File: /home/uniserver/VPS-Agent/.env.example
+# Discord application bot token. Create or rotate it in the Discord Developer Portal.
+DISCORD_BOT_TOKEN=
+
+# Restrict Hermes to the intended Discord identities and channel IDs.
+DISCORD_ALLOWED_USERS=
+DISCORD_ALLOWED_CHANNELS=
+DISCORD_HOME_CHANNEL=
+DISCORD_HOME_CHANNEL_THREAD_ID=
+
+# Discord behavior for this VPS agent.
+DISCORD_REQUIRE_MENTION=true
+DISCORD_AUTO_THREAD=true
+DISCORD_DM_POLICY=disabled
+DISCORD_MAX_ATTACHMENT_BYTES=33554432
+
+# Runtime limits from the current VPS deployment.
+TERMINAL_TIMEOUT=180
+TERMINAL_LIFETIME_SECONDS=300
+BROWSER_INACTIVITY_TIMEOUT=120
