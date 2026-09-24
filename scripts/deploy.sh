@@ -32,18 +32,22 @@ systemctl daemon-reload
 
 bash "${repo_dir}/scripts/verify.sh"
 systemctl restart hermes-gateway.service
+sleep 3
 systemctl is-active --quiet hermes-gateway.service
 printf 'Hermes gateway deployed and active.\n'
 
-# Send Discord notification to DISCORD_HOME_CHANNEL if configured
+# Send Discord notification to DISCORD_HOME_CHANNEL or target channel
 env_file="${hermes_home}/.env"
-bot_token="$(grep -m 1 '^DISCORD_BOT_TOKEN=' "${env_file}" 2>/dev/null | cut -d= -f2- || true)"
-home_channel="$(grep -m 1 '^DISCORD_HOME_CHANNEL=' "${env_file}" 2>/dev/null | cut -d= -f2- || true)"
-if [[ -z "${home_channel}" ]]; then
-  home_channel="$(grep -m 1 '^DISCORD_ALLOWED_CHANNELS=' "${env_file}" 2>/dev/null | cut -d= -f2- | cut -d, -f1 | tr -d ' ' || true)"
+bot_token="$(grep -m 1 '^DISCORD_BOT_TOKEN=' "${env_file}" 2>/dev/null | cut -d= -f2- | tr -d ' "\r\n' || true)"
+home_channel="$(grep -m 1 '^DISCORD_HOME_CHANNEL=' "${env_file}" 2>/dev/null | cut -d= -f2- | tr -d ' "\r\n' || true)"
+thread_id="$(grep -m 1 '^DISCORD_HOME_CHANNEL_THREAD_ID=' "${env_file}" 2>/dev/null | cut -d= -f2- | tr -d ' "\r\n' || true)"
+
+target_channel="${thread_id:-${home_channel}}"
+if [[ -z "${target_channel}" ]]; then
+  target_channel="$(grep -m 1 '^DISCORD_ALLOWED_CHANNELS=' "${env_file}" 2>/dev/null | cut -d= -f2- | cut -d, -f1 | tr -d ' "\r\n' || true)"
 fi
 
-if [[ -n "${bot_token}" && -n "${home_channel}" ]]; then
+if [[ -n "${bot_token}" && -n "${target_channel}" ]]; then
   commit_hash="$(git -C "${repo_dir}" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
   commit_msg="$(git -C "${repo_dir}" log -1 --pretty=%B 2>/dev/null | head -n 1 || echo "Updated configuration")"
 
@@ -65,9 +69,15 @@ print(json.dumps(data))
 ' "${commit_hash}" "${commit_msg}" 2>/dev/null || true)"
 
   if [[ -n "${payload}" ]]; then
-    curl -s -X POST "https://discord.com/api/v10/channels/${home_channel}/messages" \
+    response="$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST "https://discord.com/api/v10/channels/${target_channel}/messages" \
       -H "Authorization: Bot ${bot_token}" \
       -H "Content-Type: application/json" \
-      -d "${payload}" >/dev/null 2>&1 || true
+      -d "${payload}" 2>&1 || true)"
+    http_code="$(echo "${response}" | grep 'HTTP_STATUS:' | cut -d: -f2 || true)"
+    if [[ "${http_code}" =~ ^20[0-4]$ ]]; then
+      printf 'Discord notification sent successfully to channel %s.\n' "${target_channel}"
+    else
+      printf 'Discord notification status (HTTP %s): %s\n' "${http_code}" "${response}"
+    fi
   fi
 fi

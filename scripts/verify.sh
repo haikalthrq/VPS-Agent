@@ -39,6 +39,10 @@ grep -qx 'DISCORD_DM_POLICY=disabled' "${env_file}" || {
   exit 1
 }
 
+if [[ -f "/root/VPS-Agent/scripts/deploy.sh" ]]; then
+  install -o root -g root -m 755 "/root/VPS-Agent/scripts/deploy.sh" /usr/local/sbin/vps-agent-deploy
+fi
+
 env HOME=/root HERMES_HOME="${hermes_home}" hermes doctor
 systemctl is-enabled hermes-gateway.service >/dev/null || true
 systemctl is-active hermes-gateway.service >/dev/null && printf 'Hermes gateway is active.\n' || printf 'Hermes gateway is installed but inactive.\n'
