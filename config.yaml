@@ -57,7 +57,7 @@ display:
   skin: default
   interim_assistant_messages: true
   tool_progress: all
-  cleanup_progress: false
+  cleanup_progress: true
   long_running_notifications: true
   busy_ack_detail: true
   background_process_notifications: all
@@ -83,9 +83,6 @@ memory:
 
   creation_nudge_interval: 15
 
-  require_mention: true
-  auto_thread: true
-  unauthorized_dm_behavior: ignore
 
 code_execution:
   timeout: 300
@@ -122,3 +119,6 @@ plugins:
 platforms:
   discord:
     enabled: true
+    require_mention: true
+    auto_thread: true
+    unauthorized_dm_behavior: ignore

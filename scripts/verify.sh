@@ -16,7 +16,19 @@ done
 for name in DISCORD_BOT_TOKEN DISCORD_ALLOWED_USERS DISCORD_ALLOWED_CHANNELS; do
   value="$(grep -m 1 "^${name}=" "${env_file}" | cut -d= -f2-)"
   [[ -n "${value}" ]] || { printf 'Set %s in %s\n' "${name}" "${env_file}" >&2; exit 1; }
+  case "${value}" in
+    replace_with_a_new_bot_token|your_discord_user_id|target_channel_id)
+      printf 'Placeholder value "%s" detected for %s in %s. Please enter your actual credentials/IDs.\n' "${value}" "${name}" "${env_file}" >&2
+      exit 1
+      ;;
+  esac
 done
+
+if [[ ! -f "${hermes_home}/auth.json" ]]; then
+  printf 'OpenAI Codex authentication file missing: %s/auth.json\n' "${hermes_home}" >&2
+  printf 'Run: sudo -H env HOME=/root HERMES_HOME=/root/.hermes hermes model\n' >&2
+  exit 1
+fi
 
 grep -qx 'DISCORD_REQUIRE_MENTION=true' "${env_file}" || {
   printf 'DISCORD_REQUIRE_MENTION must remain true.\n' >&2

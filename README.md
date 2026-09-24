@@ -56,6 +56,19 @@ Use Discord Developer Mode to copy user and channel IDs. Keep `DISCORD_ALLOWED_U
 
 ## Operations
 
+You can use the helper script `scripts/manage.sh`:
+
+```bash
+sudo bash scripts/manage.sh status    # Check service status
+sudo bash scripts/manage.sh logs      # Follow live gateway logs
+sudo bash scripts/manage.sh restart   # Restart gateway service
+sudo bash scripts/manage.sh update    # Pull latest git changes, apply config & restart
+sudo bash scripts/manage.sh doctor    # Run hermes doctor diagnostics
+sudo bash scripts/manage.sh verify    # Run verification script
+```
+
+Or manage systemd directly:
+
 ```bash
 sudo systemctl status hermes-gateway.service
 sudo journalctl -u hermes-gateway.service -f
@@ -64,6 +77,35 @@ sudo -H env HOME=/root HERMES_HOME=/root/.hermes hermes doctor
 ```
 
 The gateway runs as `root` because the current VPS deployment intentionally grants its terminal tools host-level access. This is high risk: restrict Discord access tightly and rotate compromised credentials immediately.
+
+## CI/CD Auto-Deploy (GitHub Actions)
+
+This repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automatically deploys updates to your VPS whenever changes are pushed to `main`.
+
+### Required GitHub Secrets
+
+Configure these in your GitHub repository (**Settings > Secrets and variables > Actions > Repository secrets**):
+
+| Secret Name | Description | Example |
+| :--- | :--- | :--- |
+| `VPS_HOST` | IP address or domain of the VPS | `192.0.2.1` |
+| `VPS_USERNAME` | SSH user | `root` or `ubuntu` |
+| `VPS_SSH_KEY` | Private SSH key for the VPS | Content of `id_ed25519` |
+| `VPS_PORT` | *(Optional)* SSH port, defaults to 22 | `22` |
+| `VPS_DEPLOY_PATH` | *(Optional)* Absolute repo path on VPS | `/root/VPS-Agent` |
+| `VPS_PASSPHRASE` | *(Optional)* Passphrase if SSH key is encrypted | `secret` |
+
+### Setting Up SSH Key on VPS
+
+1. On your local machine (or generated for CI/CD):
+   ```bash
+   ssh-keygen -t ed25519 -C "github-actions-vps-agent" -f vps_agent_deploy
+   ```
+2. Copy the public key (`vps_agent_deploy.pub`) to your VPS:
+   ```bash
+   ssh-copy-id -i vps_agent_deploy.pub user@your_vps_ip
+   ```
+3. Add the entire content of `vps_agent_deploy` (private key) as `VPS_SSH_KEY` in GitHub Secrets.
 
 ## Validation
 
