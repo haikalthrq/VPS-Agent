@@ -37,6 +37,10 @@ case "${command_name}" in
     bash "${script_dir}/verify.sh"
     ;;
   update)
+    if [[ -x /usr/local/sbin/vps-agent-deploy ]]; then
+      exec /usr/local/sbin/vps-agent-deploy
+    fi
+
     repo_dir="$(cd "${script_dir}/.." && pwd)"
     printf 'Pulling latest changes from git...\n'
     git -C "${repo_dir}" config --global --add safe.directory "${repo_dir}" || true
